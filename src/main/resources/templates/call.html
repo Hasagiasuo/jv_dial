@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Відеодзвінок</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        :root { --primary: #3b82f6; --danger: #ef4444; --bg: #0f172a; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin:0; height: 100vh; overflow: hidden; }
+        
+        .layout { display: flex; height: 100vh; }
+        
+        /* Бічна панель */
+        .sidebar { width: 300px; background: #1e293b; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #334155; transition: 0.3s; z-index: 100; }
+        
+        .video-area { flex:1; position: relative; display:flex; background: #000; justify-content: center; align-items: center; overflow: hidden; }
+        
+        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        
+        #localVideo { 
+            position: absolute; top: 15px; right: 15px; width: 160px; height: 120px; 
+            border-radius: 12px; border: 2px solid var(--primary); object-fit: cover; z-index: 10;
+            background: #1a1f35; transform: scaleX(-1);
+        }
+
+        .controls { 
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display:flex; gap:15px; padding: 12px 25px; background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px); border-radius: 100px; z-index: 15; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-round { width: 55px; height: 55px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.2s; color: white; }
+        .btn-call { background: #22c55e; }
+        .btn-mute { background: #475569; }
+        .btn-mute.off { background: var(--danger); }
+        .btn-end { background: var(--danger); }
+
+        #callStatus { position: absolute; top: 15px; left: 60px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; font-size: 13px; z-index: 5; }
+
+        .contact { padding: 12px; background: #334155; border-radius: 10px; cursor:pointer; margin-bottom: 8px; transition: 0.2s; border: 1px solid transparent; }
+        .contact:hover { background: #475569; }
+        .contact.active { border-color: var(--primary); background: #1e293b; }
+
+        @media (max-width: 768px) {
+            .sidebar { position: absolute; left: -100%; width: 100%; height: 100%; }
+            .sidebar.active { left: 0; }
+            #localVideo { width: 120px; height: 90px; }
+            .controls { bottom: 20px; padding: 10px; }
+            .btn-round { width: 50px; height: 50px; }
+        }
+
+        #incomingCallModal { 
+            display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+            background: #1e293b; padding: 25px; border-radius: 25px; border: 2px solid var(--primary);
+            z-index: 2000; box-shadow: 0 10px 40px rgba(0,0,0,0.8); width: 90%; max-width: 320px; text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div id="incomingCallModal">
+    <div class="mb-3"><i class="fas fa-video fa-3x text-primary"></i></div>
+    <h5 id="callerName">Вхідний дзвінок</h5>
+    <div class="d-flex justify-content-center gap-3 mt-4">
+        <button onclick="acceptCall()" class="btn btn-success rounded-pill px-4">Прийняти</button>
+        <button onclick="rejectCall()" class="btn btn-danger rounded-pill px-4">Відхилити</button>
+    </div>
+</div>
+
+<div class="layout">
+    <div id="sidebar" class="sidebar">
+        <h5 class="mb-4 text-primary">Вітаємо, <span th:text="${name}"></span></h5>
+        <div class="flex-grow-1 overflow-auto">
+            <div th:each="c : ${contacts}" class="contact" th:onclick="selectUser(this, [[${c.name}]])">
+                <i class="fas fa-user me-2"></i> <span th:text="${c.name}"></span>
+            </div>
+        </div>
+        <button onclick="toggleSidebar()" class="btn btn-sm btn-outline-light d-md-none mt-2">Закрити</button>
+        <a th:href="@{/}" class="btn btn-outline-danger mt-3">Вийти</a>
+    </div>
+
+    <div class="video-area">
+        <button onclick="toggleSidebar()" class="btn btn-dark d-md-none" style="position: absolute; left: 10px; top: 10px; z-index: 20;">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div id="callStatus">Готовий до роботи</div>
+        <video id="localVideo" autoplay muted playsinline></video>
+        <video id="remoteVideo" autoplay playsinline></video>
+
+        <div class="controls">
+            <button id="toggleMic" class="btn-round btn-mute"><i class="fas fa-microphone"></i></button>
+            <button id="toggleVid" class="btn-round btn-mute"><i class="fas fa-video"></i></button>
+            <button id="callBtn" class="btn-round btn-call"><i class="fas fa-phone"></i></button>
+            <button id="endBtn" class="btn-round btn-end"><i class="fas fa-phone-slash"></i></button>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+let localStream, peerConnection, stompClient;
+let selectedUser = null, currentOffer = null;
+let iceCandidatesQueue = [];
+
+const localUser = /*[[${name}]]*/ 'user';
+const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+
+async function initMedia() {
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById("localVideo").srcObject = localStream;
+        console.log("Камера готова");
+    } catch (e) {
+        alert("Помилка доступу до медіа. Переконайтеся, що використовуєте HTTPS.");
+    }
+}
+
+function createPeer(remoteName) {
+    console.log("Створення PeerConnection для", remoteName);
+    if (peerConnection) peerConnection.close();
+    
+    peerConnection = new RTCPeerConnection(servers);
+    iceCandidatesQueue = [];
+
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    peerConnection.ontrack = e => {
+        console.log("Отримано віддалений потік");
+        document.getElementById("remoteVideo").srcObject = e.streams[0];
+        document.getElementById("callStatus").innerText = "У розмові з " + remoteName;
+    };
+
+    peerConnection.onicecandidate = e => {
+        if(e.candidate && stompClient.connected) {
+            stompClient.send("/app/candidate", {}, JSON.stringify({
+                toUser: remoteName, fromUser: localUser, candidate: e.candidate
+            }));
+        }
+    };
+}
+
+async function processIceCandidates() {
+    console.log("Обробка черги ICE кандидатів:", iceCandidatesQueue.length);
+    while (iceCandidatesQueue.length > 0) {
+        const candidate = iceCandidatesQueue.shift();
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (e) { console.error("Помилка додавання кандидата", e); }
+    }
+}
+
+function connectWS() {
+    const socket = new SockJS('/websocket');
+    stompClient = Stomp.over(socket);
+    stompClient.debug = null;
+    
+    stompClient.connect({}, () => {
+        stompClient.subscribe("/user/" + localUser + "/topic/call", msg => {
+            const data = JSON.parse(msg.body);
+            selectedUser = data.fromUser;
+            document.getElementById("callerName").innerText = "Дзвонить: " + selectedUser;
+            document.getElementById("incomingCallModal").style.display = "block";
+        });
+
+        stompClient.subscribe("/user/" + localUser + "/topic/offer", msg => {
+            currentOffer = JSON.parse(msg.body);
+            console.log("Отримано Offer");
+        });
+
+        stompClient.subscribe("/user/" + localUser + "/topic/answer", async msg => {
+            const data = JSON.parse(msg.body);
+            console.log("Отримано Answer");
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            await processIceCandidates();
+        });
+
+        stompClient.subscribe("/user/" + localUser + "/topic/candidate", async msg => {
+            const data = JSON.parse(msg.body);
+            if (peerConnection && peerConnection.remoteDescription) {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+            } else {
+                iceCandidatesQueue.push(data.candidate);
+            }
+        });
+
+        stompClient.subscribe("/user/" + localUser + "/topic/endCall", () => resetCall("Дзвінок завершено"));
+    });
+}
+
+function selectUser(el, name) {
+    selectedUser = name;
+    document.querySelectorAll('.contact').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById("callStatus").innerText = "Обрано: " + name;
+    if (window.innerWidth < 768) toggleSidebar();
+}
+
+async function acceptCall() {
+    document.getElementById("incomingCallModal").style.display = "none";
+    if (!currentOffer) return;
+
+    createPeer(currentOffer.fromUser);
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(currentOffer.offer));
+    
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    
+    stompClient.send("/app/answer", {}, JSON.stringify({
+        toUser: currentOffer.fromUser, fromUser: localUser, answer: answer
+    }));
+    await processIceCandidates();
+}
+
+function rejectCall() {
+    document.getElementById("incomingCallModal").style.display = "none";
+    if(selectedUser) stompClient.send("/app/endCall", {}, JSON.stringify({toUser: selectedUser}));
+}
+
+document.getElementById("callBtn").onclick = async () => {
+    if(!selectedUser) return alert("Оберіть контакт!");
+    
+    createPeer(selectedUser);
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    
+    stompClient.send("/app/call", {}, JSON.stringify({toUser: selectedUser, fromUser: localUser}));
+    stompClient.send("/app/offer", {}, JSON.stringify({
+        toUser: selectedUser, fromUser: localUser, offer: offer
+    }));
+    document.getElementById("callStatus").innerText = "Виклик...";
+};
+
+document.getElementById("endBtn").onclick = () => {
+    if(selectedUser) stompClient.send("/app/endCall", {}, JSON.stringify({toUser: selectedUser}));
+    resetCall("Ви завершили дзвінок");
+};
+
+function resetCall(msg) {
+    if(peerConnection) { peerConnection.close(); peerConnection = null; }
+    document.getElementById("remoteVideo").srcObject = null;
+    document.getElementById("callStatus").innerText = msg;
+    currentOffer = null;
+    iceCandidatesQueue = [];
+}
+
+document.getElementById("toggleMic").onclick = function() {
+    const t = localStream.getAudioTracks()[0];
+    t.enabled = !t.enabled;
+    this.classList.toggle("off", !t.enabled);
+    this.innerHTML = t.enabled ? '<i class="fas fa-microphone"></i>' : '<i class="fas fa-microphone-slash"></i>';
+};
+
+document.getElementById("toggleVid").onclick = function() {
+    const t = localStream.getVideoTracks()[0];
+    t.enabled = !t.enabled;
+    this.classList.toggle("off", !t.enabled);
+    this.innerHTML = t.enabled ? '<i class="fas fa-video"></i>' : '<i class="fas fa-video-slash"></i>';
+};
+
+initMedia().then(connectWS);
+/*]]>*/
+</script>
+</body>
+</html>
