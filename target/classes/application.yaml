@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: dial
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dial
+    username: lux
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+jwt:
+  secret: super-secret-key-super-secret-key-super-secret-key
+  expiration: 3600000
+  issuer: dial-app 

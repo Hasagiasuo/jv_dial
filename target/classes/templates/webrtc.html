@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebRTC Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+<h1>WebRTC Test</h1>
+
+<video id="localVideo" autoplay muted></video>
+<video id="remoteVideo" autoplay></video>
+
+<input type="text" id="localId" placeholder="Your ID">
+<input type="text" id="remoteId" placeholder="Remote ID">
+<button id="connectBtn">Connect</button>
+<button id="callBtn">Call</button>
+
+<script>
+let localStream;
+let peerConnection;
+let stompClient;
+
+const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+function getCookie(name) {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? match[2] : null;
+}
+
+document.getElementById("connectBtn").onclick = async () => {
+    const localId = document.getElementById("localId").value;
+    const socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, () => {
+        console.log("Connected");
+        stompClient.send("/app/addUser", {}, localId);
+
+        // Підписки
+        stompClient.subscribe("/user/topic/call", msg => {
+            const fromUser = msg.body;
+            console.log("Incoming call from", fromUser);
+            startCall(true, fromUser);
+        });
+
+        stompClient.subscribe("/user/topic/offer", msg => {
+            const data = JSON.parse(msg.body);
+            peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer)).then(() => {
+                peerConnection.createAnswer().then(answer => {
+                    peerConnection.setLocalDescription(answer);
+                    stompClient.send("/app/answer", {}, JSON.stringify({toUser: data.fromUser, fromUser: localId, answer}));
+                });
+            });
+        });
+
+        stompClient.subscribe("/user/topic/answer", msg => {
+            const data = JSON.parse(msg.body);
+            peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+        });
+
+        stompClient.subscribe("/user/topic/candidate", msg => {
+            const data = JSON.parse(msg.body);
+            peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        });
+    });
+
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    document.getElementById("localVideo").srcObject = localStream;
+};
+
+document.getElementById("callBtn").onclick = () => {
+    const remoteId = document.getElementById("remoteId").value;
+    startCall(false, remoteId);
+};
+
+function startCall(isOffer, remoteId) {
+    peerConnection = new RTCPeerConnection(servers);
+
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    peerConnection.ontrack = event => {
+        document.getElementById("remoteVideo").srcObject = event.streams[0];
+    };
+
+    peerConnection.onicecandidate = event => {
+        if (event.candidate) {
+            stompClient.send("/app/candidate", {}, JSON.stringify({toUser: remoteId, fromUser: document.getElementById("localId").value, candidate: event.candidate}));
+        }
+    };
+
+    if (isOffer) return; // очікуємо offer
+
+    peerConnection.createOffer().then(offer => {
+        peerConnection.setLocalDescription(offer);
+        stompClient.send("/app/offer", {}, JSON.stringify({toUser: remoteId, fromUser: document.getElementById("localId").value, offer}));
+    });
+}
+</script>
+</body>
+</html>
