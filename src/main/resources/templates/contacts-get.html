@@ -2,136 +2,250 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Мої контакти</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мої контакти | dial</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body{
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --danger: #ef4444;
+            --bg-dark: #0b0f1a;
+            --glass-bg: rgba(23, 32, 53, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-secondary: #94a3b8;
+        }
+
+        body {
             margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color:white;
+            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #0b0f1a);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            color: #f8fafc;
         }
 
-        .card{
-            background: rgba(20,20,40,0.95);
-            border-radius: 20px;
-            padding: 2.5rem 2rem;
+        .contacts-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
             width: 100%;
             max-width: 600px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
-        }
-
-        h3 {
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
-
-        .contact-item{
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            background: #1f2937;
+        /* Header Area */
+        .header-box {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.2s ease;
-            cursor: pointer;
+            margin-bottom: 2rem;
         }
 
-        .contact-item:hover{
-            background: #272d46;
-            transform: translateY(-1px);
+        h3 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin: 0;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .btn-success{
+        /* Contact Items */
+        .contact-item {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .contact-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: scale(1.01);
+        }
+
+        .contact-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
             border-radius: 12px;
-            padding: 0.5rem 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+        }
+
+        .contact-name {
             font-weight: 600;
-            transition: all 0.2s ease;
+            font-size: 1.05rem;
+            color: #f1f5f9;
         }
 
-        .btn-success:hover{
-            transform: translateY(-2px);
+        /* Actions */
+        .actions-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
-        .btn-primary{
-            border-radius: 12px;
-            padding: 0.5rem 0.9rem;
+        .btn-call {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 16px;
             font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-call:hover {
+            background: var(--primary-hover);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-remove {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 10px;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s ease;
         }
 
-        .btn-primary:hover{
-            transform: translateY(-2px);
+        .btn-remove:hover {
+            background: var(--danger);
+            color: white;
         }
 
-        .btn-outline-light{
+        /* Utility */
+        .btn-add {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 8px 16px;
             border-radius: 12px;
-            margin-top: 1rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
             transition: all 0.2s ease;
         }
 
-        .btn-outline-light:hover{
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+        .btn-add:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
         }
 
-        hr{
-            border-top: 1px solid #444;
-            margin: 2rem 0;
+        .no-contacts {
+            text-align: center;
+            padding: 3rem 0;
+            color: var(--text-secondary);
         }
 
-        .no-contacts{
-            font-size: 0.95rem;
-            color: #9ca3af;
-            margin-top: 1.5rem;
+        .no-contacts i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            opacity: 0.5;
+        }
+
+        .btn-back {
+            display: block;
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .btn-back:hover {
+            color: white;
+        }
+
+        hr {
+            border-top: 1px solid var(--glass-border);
+            margin: 2rem 0 1rem;
         }
     </style>
 </head>
 
 <body>
 
-<div class="card shadow-lg">
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>📇 Мої контакти</h3>
-        <a href="/contacts/add" class="btn btn-success btn-sm">+ Додати</a>
-    </div>
-
-    <!-- якщо контактів нема -->
-    <div th:if="${#lists.isEmpty(contacts)}" class="text-center no-contacts">
-        У вас ще немає контактів
-    </div>
-
-    <!-- список контактів -->
-    <div th:each="c : ${contacts}" class="contact-item">
-
-        <span th:text="${c.name}"></span>
-
-        <form th:action="@{'/contacts/remove/' + ${c.name}}" method="post">
-            <button class="btn btn-danger btn-sm">✖</button>
-        </form>
-
-        <a th:href="@{'/call?user=' + ${c.getName()}}" class="btn btn-primary btn-sm">
-            Дзвінок
+<div class="contacts-card">
+    
+    <div class="header-box">
+        <h3><i class="fas fa-address-book me-2 small"></i>Контакти</h3>
+        <a href="/contacts/add" class="btn-add">
+            <i class="fas fa-plus me-1"></i> Додати
         </a>
+    </div>
+
+    <div th:if="${#lists.isEmpty(contacts)}" class="no-contacts">
+        <i class="fas fa-users-slash"></i>
+        <p>У вас ще немає контактів</p>
+    </div>
+
+    <div th:each="c : ${contacts}" class="contact-item">
+        
+        <div class="contact-info">
+            <div class="avatar-placeholder">
+                <span th:text="${#strings.substring(c.name,0,1).toUpperCase()}">U</span>
+            </div>
+            <span class="contact-name" th:text="${c.name}">Олександр</span>
+        </div>
+
+        <div class="actions-group">
+            <form th:action="@{'/contacts/remove/' + ${c.name}}" method="post" class="m-0">
+                <button type="submit" class="btn-remove" title="Видалити">
+                    <i class="fas fa-trash-alt small"></i>
+                </button>
+            </form>
+
+            <a th:href="@{'/call?user=' + ${c.getName()}}" class="btn-call">
+                <i class="fas fa-video"></i> Дзвінок
+            </a>
+        </div>
 
     </div>
 
     <hr>
-
-    <a href="/" class="btn btn-outline-light w-100">← Назад</a>
+    
+    <a href="/" class="btn-back">
+        <i class="fas fa-arrow-left me-2"></i> На головну
+    </a>
 
 </div>
 
