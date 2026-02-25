@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class CallController {
@@ -25,11 +26,15 @@ public class CallController {
     }
 
     @GetMapping("/call")
-    public String get(@CookieValue("satisfy") String jwtToken, Model model) {
+    public String get(@CookieValue("satisfy") String jwtToken, 
+                    @RequestParam(value = "caller", required = false) String caller, 
+                    Model model) {
         String name = this.jwtGenerator.parseName(jwtToken);
         Iterable<Contact> contacts = this.contactsService.getMyAll(name);
+        
         model.addAttribute("name", name);
         model.addAttribute("contacts", contacts);
+        model.addAttribute("incomingCaller", caller);
         return "call";
     }
 

@@ -224,15 +224,8 @@
 <div class="app-container">
     <aside id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h4 class="mb-4 fw-bold">VideoCall<span class="text-primary">.</span></h4>
-            <div class="user-badge">
-                <div class="avatar-placeholder" style="width: 32px; height: 32px; font-size: 14px;">
-                    <i class="fas fa-user"></i>
-                </div>
-                <span class="fw-medium text-truncate" th:text="${name}">Користувач</span>
-            </div>
+            <h4 class="mb-4 fw-bold">Оберіть контакт та зателефонуйте<span class="text-primary"></span></h4>
         </div>
-
         <div class="contact-list">
             <p class="small text-uppercase text-secondary fw-bold mb-3 px-2" style="letter-spacing: 1px;">Контакти</p>
             <div th:each="c : ${contacts}" class="contact-card" th:onclick="selectUser(this, [[${c.contactUser.name}]])">
@@ -289,8 +282,10 @@ let stompClient = null;
 let selectedUser = null; 
 let currentOffer = null;
 let iceCandidatesQueue = [];
+let pendingAutoAccept = false; 
+let mediaReady = false; 
+let isCalling = false; // НОВИЙ ПРАПОРЕЦЬ: чи ми ініціатори дзвінка
 
-// Параметри для зміни камери
 let useFrontCamera = true;
 let hasMultipleCameras = false;
 
@@ -300,9 +295,19 @@ const servers = {
 
 const localUser = /*[[${name}]]*/ 'user';
 
+window.onload = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const callerFromServer = urlParams.get('caller');
+    
+    if (callerFromServer) {
+        selectedUser = callerFromServer;
+        pendingAutoAccept = true; 
+        document.getElementById("callStatus").innerText = "Очікування готовності камери...";
+    }
+};
+
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
 
-// Перевірка кількості камер
 async function checkCameras() {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
@@ -315,36 +320,29 @@ async function initMedia() {
         if (localStream) {
             localStream.getTracks().forEach(track => track.stop());
         }
-        
-        // Вибір режиму камери
         const constraints = {
             audio: true,
-            video: {
-                facingMode: useFrontCamera ? "user" : "environment"
-            }
+            video: { facingMode: useFrontCamera ? "user" : "environment" }
         };
-
         localStream = await navigator.mediaDevices.getUserMedia(constraints);
         document.getElementById("localVideo").srcObject = localStream;
-        
-        // Ефект дзеркала тільки для фронтальної камери
         document.getElementById("localVideo").style.transform = useFrontCamera ? "scaleX(-1)" : "scaleX(1)";
 
-        // Якщо дзвінок уже активний, замінюємо трек у PeerConnection
         if (peerConnection) {
             const videoTrack = localStream.getVideoTracks()[0];
             const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
             if (sender) sender.replaceTrack(videoTrack);
         }
         
+        mediaReady = true; 
+        console.log("Медіа ініціалізовано успішно");
         await checkCameras();
     } catch (e) {
         console.error("Помилка медіа:", e);
-        alert("Помилка доступу до камери.");
+        document.getElementById("callStatus").innerText = "Помилка камери!";
     }
 }
 
-// Обробник натискання зміни камери
 document.getElementById("switchCam").onclick = async () => {
     if (!hasMultipleCameras) return;
     useFrontCamera = !useFrontCamera;
@@ -356,13 +354,16 @@ function createPeer(remoteName) {
     peerConnection = new RTCPeerConnection(servers);
 
     if (localStream) {
-        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        localStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, localStream);
+        });
     }
 
     peerConnection.ontrack = e => {
         const remoteVid = document.getElementById("remoteVideo");
         if (remoteVid.srcObject !== e.streams[0]) {
             remoteVid.srcObject = e.streams[0];
+            remoteVid.play().catch(err => console.warn("Автоплей заблоковано:", err));
             document.getElementById("callStatus").innerText = "Розмова: " + remoteName;
         }
     };
@@ -376,7 +377,123 @@ function createPeer(remoteName) {
     };
 }
 
-// Решта логіки WebSocket та PeerConnection (без змін)
+function connectWS() {
+    const socket = new SockJS('/websocket');
+    stompClient = Stomp.over(socket);
+    stompClient.debug = null;
+    stompClient.connect({}, () => {
+        
+        stompClient.subscribe("/user/" + localUser + "/topic/call", msg => {
+            const data = JSON.parse(msg.body);
+            if (!pendingAutoAccept) {
+                selectedUser = data.fromUser;
+                document.getElementById("callerName").innerText = data.fromUser;
+                document.getElementById("incomingCallModal").classList.add("show");
+            }
+        });
+
+        stompClient.subscribe("/user/" + localUser + "/topic/offer", async msg => { 
+            currentOffer = JSON.parse(msg.body); 
+            console.log("Отримано OFFER від", currentOffer.fromUser);
+            
+            // Якщо ми дзвонили і нам відповіли потоком (Offer)
+            if (isCalling && currentOffer.fromUser === selectedUser) {
+                await processReceivedOffer(); 
+            } else {
+                // Стандартна обробка на випадок звичайної передачі
+                selectedUser = currentOffer.fromUser;
+                document.getElementById("callerName").innerText = currentOffer.fromUser;
+                document.getElementById("incomingCallModal").classList.add("show");
+            }
+        });
+
+        stompClient.subscribe("/user/" + localUser + "/topic/answer", async msg => {
+            const data = JSON.parse(msg.body);
+            if (peerConnection) {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                await processIceCandidates();
+            }
+        });
+
+        stompClient.subscribe("/user/" + localUser + "/topic/candidate", async msg => {
+            const data = JSON.parse(msg.body);
+            if (peerConnection?.remoteDescription) { 
+                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate)); 
+            } else { 
+                iceCandidatesQueue.push(data.candidate); 
+            }
+        });
+
+        stompClient.subscribe("/user/" + localUser + "/topic/endCall", () => resetCall("Співрозмовник завершив дзвінок"));
+
+        // Якщо ми прийшли з головної сторінки - автоматично приймаємо і надсилаємо наш потік
+        if (pendingAutoAccept && selectedUser) {
+            acceptCall();
+        }
+    });
+}
+
+// 1. ТОЙ ХТО ПРИЙМАЄ ДЗВІНОК - ВІДПРАВЛЯЄ OFFER
+async function acceptCall() {
+    if (!mediaReady) {
+        console.log("Очікування камери...");
+        setTimeout(acceptCall, 500);
+        return;
+    }
+
+    document.getElementById("incomingCallModal").classList.remove("show");
+    pendingAutoAccept = false;
+    
+    // Якщо приймаємо з модалки, беремо користувача
+    if (!selectedUser && currentOffer) selectedUser = currentOffer.fromUser;
+    if (!selectedUser) return;
+
+    createPeer(selectedUser);
+
+    try {
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        
+        stompClient.send("/app/offer", {}, JSON.stringify({
+            toUser: selectedUser, 
+            fromUser: localUser, 
+            offer: offer
+        }));
+        
+        document.getElementById("callStatus").innerText = "З'єднання...";
+    } catch (err) {
+        console.error("Помилка при створенні Offer:", err);
+    }
+}
+
+// 2. ТОЙ ХТО ДЗВОНИВ - ОТРИМУЄ OFFER І ВІДПРАВЛЯЄ ANSWER
+async function processReceivedOffer() {
+    if (!mediaReady) {
+        setTimeout(processReceivedOffer, 500);
+        return;
+    }
+
+    if (!currentOffer) return;
+    createPeer(currentOffer.fromUser);
+
+    try {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(currentOffer.offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        
+        stompClient.send("/app/answer", {}, JSON.stringify({
+            toUser: currentOffer.fromUser, 
+            fromUser: localUser, 
+            answer: answer
+        }));
+        
+        await processIceCandidates();
+        console.log("Відповідь (Answer) успішно відправлено");
+    } catch (err) {
+        console.error("Помилка при створенні Answer:", err);
+    }
+}
+
 async function processIceCandidates() {
     while (iceCandidatesQueue.length > 0) {
         const candidate = iceCandidatesQueue.shift();
@@ -387,34 +504,6 @@ async function processIceCandidates() {
     }
 }
 
-function connectWS() {
-    const socket = new SockJS('/websocket');
-    stompClient = Stomp.over(socket);
-    stompClient.debug = null;
-    stompClient.connect({}, () => {
-        stompClient.subscribe("/user/" + localUser + "/topic/call", msg => {
-            const data = JSON.parse(msg.body);
-            selectedUser = data.fromUser;
-            document.getElementById("callerName").innerText = data.fromUser;
-            document.getElementById("incomingCallModal").classList.add("show");
-        });
-        stompClient.subscribe("/user/" + localUser + "/topic/offer", async msg => { currentOffer = JSON.parse(msg.body); });
-        stompClient.subscribe("/user/" + localUser + "/topic/answer", async msg => {
-            const data = JSON.parse(msg.body);
-            if (peerConnection) {
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-                await processIceCandidates();
-            }
-        });
-        stompClient.subscribe("/user/" + localUser + "/topic/candidate", async msg => {
-            const data = JSON.parse(msg.body);
-            if (peerConnection?.remoteDescription) { await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate)); } 
-            else { iceCandidatesQueue.push(data.candidate); }
-        });
-        stompClient.subscribe("/user/" + localUser + "/topic/endCall", () => resetCall("Співрозмовник завершив дзвінок"));
-    });
-}
-
 function selectUser(el, name) {
     selectedUser = name;
     document.querySelectorAll('.contact-card').forEach(c => c.classList.remove('active'));
@@ -423,26 +512,15 @@ function selectUser(el, name) {
     if (window.innerWidth < 992) toggleSidebar();
 }
 
+// ТОЙ ХТО ДЗВОНИТЬ ПРОСТО ВІДПРАВЛЯЄ СПОВІЩЕННЯ, ЩОБ НЕ ВТРАТИТИ OFFER
 document.getElementById("callBtn").onclick = async () => {
     if(!selectedUser) return alert("Оберіть контакт!");
-    createPeer(selectedUser);
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
+    if(!mediaReady) return alert("Будь ласка, зачекайте ініціалізації камери");
+    
+    isCalling = true; // Фіксуємо, що ми ініціатор дзвінка
     stompClient.send("/app/call", {}, JSON.stringify({toUser: selectedUser, fromUser: localUser}));
-    stompClient.send("/app/offer", {}, JSON.stringify({toUser: selectedUser, fromUser: localUser, offer: offer}));
-    document.getElementById("callStatus").innerText = "Виклик...";
+    document.getElementById("callStatus").innerText = "Очікування відповіді від " + selectedUser + "...";
 };
-
-async function acceptCall() {
-    document.getElementById("incomingCallModal").classList.remove("show");
-    if (!currentOffer) return;
-    createPeer(currentOffer.fromUser);
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(currentOffer.offer));
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    stompClient.send("/app/answer", {}, JSON.stringify({toUser: currentOffer.fromUser, fromUser: localUser, answer: answer}));
-    await processIceCandidates();
-}
 
 function rejectCall() {
     document.getElementById("incomingCallModal").classList.remove("show");
@@ -456,11 +534,16 @@ document.getElementById("endBtn").onclick = () => {
 };
 
 function resetCall(msg) {
-    if (peerConnection) { peerConnection.close(); peerConnection = null; }
+    if (peerConnection) { 
+        peerConnection.close(); 
+        peerConnection = null; 
+    }
     document.getElementById("remoteVideo").srcObject = null;
     document.getElementById("callStatus").innerText = msg;
     currentOffer = null;
     iceCandidatesQueue = [];
+    isCalling = false;
+    pendingAutoAccept = false;
 }
 
 document.getElementById("toggleMic").onclick = function() {
@@ -482,6 +565,7 @@ document.getElementById("toggleVid").onclick = function() {
 };
 
 initMedia().finally(() => connectWS());
+
 /*]]>*/
 </script>
 </body>

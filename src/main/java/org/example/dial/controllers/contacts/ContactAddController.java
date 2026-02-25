@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import jakarta.validation.Valid;
+
 @Controller
 @RequestMapping("/contacts/add")
 public class ContactAddController {
@@ -32,7 +34,7 @@ public class ContactAddController {
     @PostMapping
     public String postAddContact(
             @CookieValue(name = "satisfy", defaultValue = "") String jwtToken,
-            @ModelAttribute ContactAdd dto,
+            @Valid @ModelAttribute ContactAdd dto,
             Model model
     ) {
         String name = this.jwtGenerator.parseName(jwtToken);

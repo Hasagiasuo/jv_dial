@@ -1,3 +1,4 @@
+org/example/dial/controllers/contacts/ContactsController.class
 org/example/dial/controllers/users/UsersController.class
 org/example/dial/utils/JwtHandshakeInterceptor.class
 org/example/dial/models/User.class
@@ -6,9 +7,11 @@ org/example/dial/errors/ContactAlreadyExistsError.class
 org/example/dial/repositories/UserRepository.class
 org/example/dial/utils/Option.class
 org/example/dial/config/JwtConfig.class
+org/example/dial/controllers/contacts/IsFavoriteContactController.class
 org/example/dial/dto/UserUpdate.class
 org/example/dial/services/ContactsService.class
 org/example/dial/models/UserRole.class
+org/example/dial/controllers/contacts/ContactUpdateController.class
 org/example/dial/services/AuthService.class
 org/example/dial/models/Contact.class
 org/example/dial/errors/PasswordUncorrectError.class
@@ -34,6 +37,6 @@ org/example/dial/dto/ContactAdd.class
 org/example/dial/utils/Result.class
 org/example/dial/controllers/users/UserEditController.class
 org/example/dial/controllers/contacts/ContactAddController.class
-org/example/dial/controllers/contacts/ContactController.class
+org/example/dial/dto/ContactUpdate.class
 org/example/dial/errors/CannotSaveEntityError.class
 org/example/dial/controllers/contacts/ContactRemoveController.class

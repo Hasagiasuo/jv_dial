@@ -30,7 +30,6 @@
             color: #f8fafc;
         }
 
-        /* Auth Card Styling */
         .auth-card {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
@@ -48,7 +47,6 @@
             border-color: rgba(99, 102, 241, 0.3);
         }
 
-        /* Brand Icon for Registration */
         .brand-icon {
             width: 56px;
             height: 56px;
@@ -62,7 +60,6 @@
             box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
         }
 
-        /* Typography */
         .auth-card h3 {
             font-size: 2.25rem;
             font-weight: 800;
@@ -79,7 +76,6 @@
             margin-bottom: 2.5rem;
         }
 
-        /* Form Styling */
         .form-label {
             font-size: 0.875rem;
             font-weight: 500;
@@ -104,7 +100,6 @@
             color: white;
         }
 
-        /* Button Styling */
         .btn-register {
             background: var(--primary);
             border: none;
@@ -124,7 +119,6 @@
             box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.4);
         }
 
-        /* Error Messages */
         .error-container {
             background: rgba(244, 63, 94, 0.1);
             border: 1px solid rgba(244, 63, 94, 0.2);
@@ -138,7 +132,24 @@
             gap: 10px;
         }
 
-        /* Footer Link */
+        /* Стилі для помилок валідації полів */
+        .field-error {
+            color: #fb7185;
+            font-size: 0.75rem;
+            margin-top: 5px;
+            margin-left: 4px;
+            display: block;
+        }
+
+        /* Стиль для підказки (хінта) */
+        .field-hint {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            margin-top: 6px;
+            margin-left: 4px;
+            display: block;
+        }
+
         .login-link {
             margin-top: 2rem;
             padding-top: 1.5rem;
@@ -185,6 +196,7 @@
                    th:field="*{name}"
                    placeholder="Pick a unique name"
                    required>
+            <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
         </div>
 
         <div class="mb-4">
@@ -192,8 +204,10 @@
             <input type="password"
                    class="form-control"
                    th:field="*{password}"
-                   placeholder="At least 6 characters"
+                   placeholder="At least 8 characters"
                    required>
+            <span class="field-hint"><i class="fas fa-info-circle me-1"></i> Мінімум 8 символів</span>
+            <span class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
         </div>
 
         <button type="submit" class="btn btn-register">

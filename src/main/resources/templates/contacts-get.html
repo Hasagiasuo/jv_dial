@@ -13,6 +13,8 @@
             --primary: #6366f1;
             --primary-hover: #4f46e5;
             --danger: #ef4444;
+            --warning: #fbbf24;
+            --info: #38bdf8; /* Колір для кнопки редагування */
             --bg-dark: #0b0f1a;
             --glass-bg: rgba(23, 32, 53, 0.8);
             --glass-border: rgba(255, 255, 255, 0.08);
@@ -42,7 +44,6 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        /* Header Area */
         .header-box {
             display: flex;
             justify-content: space-between;
@@ -59,7 +60,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Contact Items */
         .contact-item {
             background: rgba(15, 23, 42, 0.4);
             border: 1px solid var(--glass-border);
@@ -102,32 +102,47 @@
             color: #f1f5f9;
         }
 
-        /* Actions */
         .actions-group {
             display: flex;
             gap: 8px;
             align-items: center;
         }
 
-        .btn-call {
-            background: var(--primary);
-            color: white;
+        .btn-favorite {
+            background: transparent;
             border: none;
-            border-radius: 10px;
-            padding: 8px 16px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            padding: 5px;
             transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            cursor: pointer;
+            line-height: 1;
         }
 
-        .btn-call:hover {
-            background: var(--primary-hover);
+        .btn-favorite:hover, .btn-favorite.active {
+            color: var(--warning);
+            transform: scale(1.1);
+        }
+
+        /* Новий стиль для кнопки редагування */
+        .btn-edit {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--info);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 10px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-edit:hover {
+            background: var(--info);
             color: white;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
         }
 
         .btn-remove {
@@ -135,12 +150,13 @@
             color: var(--danger);
             border: 1px solid rgba(239, 68, 68, 0.2);
             border-radius: 10px;
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+            border: none;
         }
 
         .btn-remove:hover {
@@ -148,7 +164,6 @@
             color: white;
         }
 
-        /* Utility */
         .btn-add {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--glass-border);
@@ -173,13 +188,6 @@
             color: var(--text-secondary);
         }
 
-        .no-contacts i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: block;
-            opacity: 0.5;
-        }
-
         .btn-back {
             display: block;
             text-align: center;
@@ -187,7 +195,6 @@
             color: var(--text-secondary);
             text-decoration: none;
             font-size: 0.9rem;
-            font-weight: 500;
             transition: color 0.2s;
         }
 
@@ -198,6 +205,16 @@
         hr {
             border-top: 1px solid var(--glass-border);
             margin: 2rem 0 1rem;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--danger);
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -213,13 +230,18 @@
         </a>
     </div>
 
+    <div th:if="${errorMessage}" class="alert-error">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${errorMessage}">Помилка</span>
+    </div>
+
     <div th:if="${#lists.isEmpty(contacts)}" class="no-contacts">
-        <i class="fas fa-users-slash"></i>
+        <i class="fas fa-users-slash fa-3x mb-3 opacity-50"></i>
         <p>У вас ще немає контактів</p>
     </div>
 
     <div th:each="c : ${contacts}" class="contact-item">
-        
+    
         <div class="contact-info">
             <div class="avatar-placeholder">
                 <span th:text="${#strings.substring(c.name,0,1).toUpperCase()}">U</span>
@@ -228,17 +250,25 @@
         </div>
 
         <div class="actions-group">
+            <form th:action="@{'/contacts/favorite/' + ${c.name} + '/' + ${c.isFavorite ? 0 : 1}}" method="post" class="m-0">
+                <button type="submit" 
+                        class="btn-favorite" 
+                        th:classappend="${c.isFavorite} ? 'active' : ''"
+                        th:title="${c.isFavorite} ? 'Прибрати з обраних' : 'Додати в обрані'">
+                    <i th:class="${c.isFavorite} ? 'fas fa-star' : 'far fa-star'"></i>
+                </button>
+            </form>
+
+            <a th:href="@{'/contacts/update/' + ${c.name}}" class="btn-edit" title="Редагувати">
+                <i class="fas fa-pen-fancy small"></i>
+            </a>
+
             <form th:action="@{'/contacts/remove/' + ${c.name}}" method="post" class="m-0">
                 <button type="submit" class="btn-remove" title="Видалити">
                     <i class="fas fa-trash-alt small"></i>
                 </button>
             </form>
-
-            <a th:href="@{'/call?user=' + ${c.getName()}}" class="btn-call">
-                <i class="fas fa-video"></i> Дзвінок
-            </a>
         </div>
-
     </div>
 
     <hr>

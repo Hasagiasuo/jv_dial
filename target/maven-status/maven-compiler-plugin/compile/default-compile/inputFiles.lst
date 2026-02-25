@@ -4,11 +4,14 @@
 /Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/controllers/BaseController.java
 /Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/controllers/calls/CallController.java
 /Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/controllers/contacts/ContactAddController.java
-/Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/controllers/contacts/ContactController.java
 /Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/controllers/contacts/ContactRemoveController.java
+/Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/controllers/contacts/ContactUpdateController.java
+/Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/controllers/contacts/ContactsController.java
+/Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/controllers/contacts/IsFavoriteContactController.java
 /Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/controllers/users/UserEditController.java
 /Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/controllers/users/UsersController.java
 /Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/dto/ContactAdd.java
+/Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/dto/ContactUpdate.java
 /Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/dto/UserAdd.java
 /Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/dto/UserAuth.java
 /Users/dmitro/Data/jv/dial/src/main/java/org/example/dial/dto/UserJwt.java

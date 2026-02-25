@@ -1,8 +1,10 @@
 package org.example.dial.services;
 
+import java.util.Comparator;
 import java.util.stream.StreamSupport;
 
 import org.example.dial.dto.ContactAdd;
+import org.example.dial.dto.ContactUpdate;
 import org.example.dial.errors.CannotSaveEntityError;
 import org.example.dial.errors.ContactAlreadyExistsError;
 import org.example.dial.errors.ContactNotFoundError;
@@ -39,10 +41,12 @@ public class ContactsService {
     }
 
     public Iterable<Contact> getMyAll(String name) {
-        return StreamSupport.stream(this.contactRepository.findAll().spliterator(), false)
-            .filter(u -> u.getOwner().getName().equals(name))
-            .toList();
-    }
+    return StreamSupport.stream(this.contactRepository.findAll().spliterator(), false)
+        .filter(u -> u.getOwner().getName().equals(name))
+        .sorted(Comparator.comparing(Contact::getIsFavorite).reversed()
+                          .thenComparing(Contact::getName)) // Другорядне сортування за алфавітом
+        .toList();
+}
 
     public Option removeContact(String ownerName, String contactName) {
         if (!this.existsInUser(ownerName, contactName)) return new Option(new ContactNotFoundError(ownerName, contactName));
@@ -53,9 +57,11 @@ public class ContactsService {
     }
 
     public Option addContact(String ownerName, ContactAdd dto) {
-        Result<User> owner = this.userCrudService.getByName(ownerName);
         if (this.existsInUser(ownerName, dto.getName())) 
             return new Option(new ContactAlreadyExistsError(ownerName, dto.getName()));
+        Result<User> owner = this.userCrudService.getByName(ownerName);
+        if (!owner.isSuccess()) 
+            return new Option(owner.getError());
         Result<User> contact = this.userCrudService.getByName(dto.getContactName());
         if (!contact.isSuccess()) { return new Option(owner.getError()); }
         Contact newContact = new Contact();
@@ -64,6 +70,29 @@ public class ContactsService {
         newContact.setName(dto.getName());
         newContact.setIsFavorite(false);
         Contact addedContact = this.contactRepository.save(newContact);
-        return addedContact != null ? new Option() : new Option(new CannotSaveEntityError("contacts"));
+        return addedContact != null ? 
+            new Option() : 
+            new Option(new CannotSaveEntityError("contacts"));
     }
+
+    public Option updateIsFavoriteContact(String ownerName, String contactName, boolean isFavorite) {
+        if (!this.existsInUser(ownerName, contactName)) 
+            return new Option(new ContactNotFoundError(ownerName, contactName));
+        Result<Contact> contact = this.getContact(ownerName, contactName);
+        if (!contact.isSuccess()) 
+            return new Option(contact.getError());
+        contact.getValue().setIsFavorite(isFavorite);
+        this.contactRepository.save(contact.getValue());
+        return new Option();
+    }
+
+    public Option updateContact(String ownerName, String contactName, ContactUpdate dto) {
+        Result<Contact> contact = this.getContact(ownerName, contactName);
+        if (!contact.isSuccess()) {
+            return new Option(contact.getError());
+        }
+        contact.getValue().setName(dto.getNewContactName());
+        this.contactRepository.save(contact.getValue());
+        return new Option();
+    } 
 }

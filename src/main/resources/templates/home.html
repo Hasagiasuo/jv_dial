@@ -167,6 +167,46 @@
             margin-bottom: 1rem;
             display: inline-block;
         }
+
+#incomingCallModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1e293b;
+    padding: 40px;
+    border-radius: 32px;
+    border: 1px solid var(--glass-border);
+    z-index: 2000;
+    box-shadow: 0 0 100px rgba(0,0,0,0.8);
+    width: 90%;
+    max-width: 380px;
+    text-align: center;
+}
+
+#incomingCallModal.show { 
+    display: block; 
+    animation: modalIn 0.4s ease-out; 
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translate(-50%, -45%) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.avatar-call {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary), #a855f7);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+}
     </style>
 </head>
 <body>
@@ -251,6 +291,54 @@
     </div>
 </section>
 
+<div id="incomingCallModal">
+    <div class="avatar-call">
+        <i class="fas fa-video text-white"></i>
+    </div>
+    <h4 id="callerNameDisplay" class="mb-2 text-white">Вхідний виклик</h4>
+    <p class="text-secondary mb-5">Запрошення до відеозв'язку...</p>
+    <div class="d-flex gap-3">
+        <button onclick="acceptCall()" class="btn btn-success flex-grow-1 rounded-4 py-3 fw-semibold">Прийняти</button>
+        <button onclick="rejectCall()" class="btn btn-outline-light flex-grow-1 rounded-4 py-3 fw-semibold">Відхилити</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+/*<![CDATA[*/
+    const isAuthenticated = /*[[${isAuthenticated}]]*/ false;
+    const localUser = /*[[${name}]]*/ 'guest';
+
+    if (isAuthenticated) {
+        let socket = new SockJS('/websocket');
+        let stompClient = Stomp.over(socket);
+        stompClient.debug = null; 
+
+        stompClient.connect({}, () => {
+            console.log("Сповіщення про дзвінки активовано для: " + localUser);
+            stompClient.subscribe("/user/" + localUser + "/topic/call", msg => {
+                const data = JSON.parse(msg.body);
+                showCallNotification(data.fromUser);
+            });
+        });
+    }
+
+    function showCallNotification(callerName) {
+        document.getElementById("callerNameDisplay").innerText = "Дзвонить: " + callerName;
+        document.getElementById("incomingCallModal").classList.add("show");
+    }
+
+    function acceptCall() {
+    const callerName = document.getElementById("callerNameDisplay").innerText.replace("Дзвонить: ", "");
+    window.location.href = "/call?caller=" + encodeURIComponent(callerName);
+}
+
+    function rejectCall() {
+        document.getElementById("incomingCallModal").classList.remove("show");
+    }
+/*]]>*/
+</script>
 </body>
 </html>
