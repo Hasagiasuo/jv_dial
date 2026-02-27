@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>dial</title>
+    <title>Video Call</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
@@ -48,17 +48,6 @@
         }
 
         .sidebar-header { padding: 30px 24px; border-bottom: 1px solid var(--glass-border); }
-
-        .user-badge {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px;
-            background: rgba(99, 102, 241, 0.1);
-            border-radius: 12px;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-
         .contact-list { flex-grow: 1; overflow-y: auto; padding: 15px; }
 
         .contact-card {
@@ -77,111 +66,116 @@
         .contact-card.active { background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); }
 
         .avatar-placeholder {
-            width: 42px;
-            height: 42px;
+            width: 42px; height: 42px;
             background: linear-gradient(135deg, var(--primary), #a855f7);
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
-        .main-view { flex: 1; position: relative; display: flex; background: #000; overflow: hidden; }
+        .main-view {
+            flex: 1;
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle, #1a1f35 0%, #000 100%);
+            overflow: hidden;
+        }
 
-        #remoteVideo { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.5s; }
+        #remoteVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Змінено з cover: тепер бачимо все зображення */
+    background-color: #000;
+}
 
-        #localVideo {
+    #localVideo {
             position: absolute;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* Тінь для об'єму */
+            transition: box-shadow 0.1s ease;
             top: 25px;
             right: 25px;
-            width: 220px;
-            height: 140px;
-            border-radius: 20px;
-            border: 2px solid var(--glass-border);
-            object-fit: cover;
+            width: 25vw; /* Відносний розмір */
+            max-width: 240px;
+            min-width: 120px;
+            border-radius: 16px;
             z-index: 10;
-            background: #1a1f35;
             transform: scaleX(-1);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            transition: all 0.3s ease;
+            background: #2d2d2d;
+            object-fit: contain; /* Тепер твоє відео теж не обрізається */
+            aspect-ratio: auto;
+        }
+
+        .speaking-glow {
+        box-shadow: 0 0 20px 8px rgba(99, 102, 241, 0.8) !important;
+    }
+
+/* Налаштування саме для ТЕЛЕФОНІВ */
+        @media (max-width: 992px) {
+            .sidebar { position: absolute; left: -320px; height: 100%; }
+            .sidebar.active { left: 0; }
+            
+            #localVideo { 
+                width: 30vw;
+                max-width: 140px;
+                aspect-ratio: 9 / 16; /* Вертикальний для смартфонів */
+                top: auto !important;
+                bottom: 120px;
+                right: 15px;
+            }
+        }
+
+        #localVideo.speaking {
+            border-color: var(--primary);
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
         }
 
         .status-pill {
-            position: absolute;
-            top: 25px;
-            left: 50%;
+            position: absolute; top: 25px; left: 50%;
             transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(12px);
             padding: 8px 24px;
             border-radius: 30px;
-            font-size: 13px;
-            font-weight: 500;
+            font-size: 13px; font-weight: 500;
             z-index: 20;
             border: 1px solid var(--glass-border);
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            display: flex; align-items: center; gap: 10px;
             color: #cbd5e1;
         }
 
         .status-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
 
         .controls-wrapper {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
+            position: absolute; bottom: 40px; left: 50%;
             transform: translateX(-50%);
-            display: flex;
-            gap: 12px;
-            padding: 16px;
+            display: flex; gap: 12px; padding: 16px;
             background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(24px);
             border-radius: 24px;
             z-index: 30;
             border: 1px solid var(--glass-border);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
         .action-btn {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            color: white;
-            cursor: pointer;
+            width: 52px; height: 52px;
+            border-radius: 16px; border: none;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; transition: all 0.3s ease;
+            color: white; cursor: pointer;
             background: rgba(255, 255, 255, 0.08);
         }
 
         .action-btn:hover:not(:disabled) { transform: translateY(-5px); background: rgba(255, 255, 255, 0.15); }
-        .action-btn:disabled { opacity: 0.3; cursor: not-allowed; background: rgba(255,255,255,0.02); color: #64748b; }
-
         .action-btn.btn-call { background: var(--success); }
         .action-btn.btn-end { background: var(--danger); }
         .action-btn.off { background: var(--danger); }
-        .action-btn.active-primary { background: var(--primary); }
 
         #incomingCallModal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #1e293b;
-            padding: 40px;
-            border-radius: 32px;
-            border: 1px solid var(--glass-border);
-            z-index: 2000;
-            box-shadow: 0 0 100px rgba(0,0,0,0.8);
-            width: 90%;
-            max-width: 380px;
-            text-align: center;
+            display: none; position: fixed;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #1e293b; padding: 40px; border-radius: 32px;
+            z-index: 2000; box-shadow: 0 0 100px rgba(0,0,0,0.8);
+            width: 90%; max-width: 380px; text-align: center;
         }
 
         #incomingCallModal.show { display: block; animation: modalIn 0.4s ease-out; }
@@ -192,20 +186,28 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
+            0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.3); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 1; }
         }
 
         @media (max-width: 992px) {
             .sidebar { position: absolute; left: -320px; height: 100%; }
             .sidebar.active { left: 0; }
-            #localVideo { width: 140px; height: 100px; bottom: 120px; top: auto; right: 20px; }
-            .controls-wrapper { width: 95%; justify-content: space-around; bottom: 20px; gap: 5px; }
+            #localVideo { 
+                width: 100px !important; height: 177px !important; 
+                aspect-ratio: 9/16 !important; bottom: 120px; top: auto !important; right: 15px !important;
+                border-radius: 12px;
+            }
+            #remoteVideo { aspect-ratio: 9/16; }
+            .controls-wrapper { width: 95%; justify-content: space-around; bottom: 20px; }
         }
     </style>
 </head>
 <body>
+
+<audio id="sndIncoming" src="https://www.orangefreesounds.com/wp-content/uploads/2019/03/Calling-ringtone.mp3" loop></audio>
+<audio id="sndOutgoing" src="https://ringtoneop.com/wp-content/uploads/2024/06/cool-and-calm.mp3" loop></audio>
+<audio id="sndEnd" src=""></audio>
 
 <div id="incomingCallModal">
     <div class="mb-4">
@@ -224,21 +226,20 @@
 <div class="app-container">
     <aside id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h4 class="mb-4 fw-bold">Оберіть контакт та зателефонуйте<span class="text-primary"></span></h4>
+            <h4 class="mb-4 fw-bold">Дзвінки</h4>
         </div>
         <div class="contact-list">
-            <p class="small text-uppercase text-secondary fw-bold mb-3 px-2" style="letter-spacing: 1px;">Контакти</p>
+            <p class="small text-uppercase text-secondary fw-bold mb-3 px-2">Контакти</p>
             <div th:each="c : ${contacts}" class="contact-card" th:onclick="selectUser(this, [[${c.contactUser.name}]])">
                 <div class="avatar-placeholder">
                     <span th:text="${#strings.substring(c.name,0,1)}">U</span>
                 </div>
                 <div class="flex-grow-1">
                     <div class="fw-semibold text-white" th:text="${c.name}">Name</div>
-                    <div class="small text-secondary">Натисніть, щоб обрати</div>
+                    <div class="small text-secondary">Натисніть для вибору</div>
                 </div>
             </div>
         </div>
-
         <div class="p-4 border-top border-white border-opacity-10">
             <a th:href="@{/}" class="btn btn-dark w-100 rounded-4 py-2 text-danger fw-medium">
                 <i class="fas fa-sign-out-alt me-2"></i>Вийти
@@ -257,22 +258,19 @@
         </div>
 
         <video id="localVideo" autoplay muted playsinline></video>
-        <video id="remoteVideo" autoplay playsinline poster="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="></video>
+        <video id="remoteVideo" autoplay playsinline style="opacity: 0;"></video>
 
         <div class="controls-wrapper">
             <button id="toggleMic" class="action-btn" title="Мікрофон"><i class="fas fa-microphone"></i></button>
             <button id="toggleVid" class="action-btn" title="Камера"><i class="fas fa-video"></i></button>
-            
+            <button id="toggleRemoteAudio" class="action-btn" title="Звук співрозмовника"><i class="fas fa-volume-up"></i></button>
             <button id="switchCam" class="action-btn" title="Змінити камеру"><i class="fas fa-sync"></i></button>
-            
             <div style="width: 1px; background: var(--glass-border); margin: 0 5px;"></div>
             <button id="callBtn" class="action-btn btn-call" title="Зателефонувати"><i class="fas fa-phone"></i></button>
             <button id="endBtn" class="action-btn btn-end" title="Завершити"><i class="fas fa-phone-slash"></i></button>
         </div>
     </main>
 </div>
-
-
 
 <script th:inline="javascript">
 /*<![CDATA[*/
@@ -284,87 +282,268 @@ let currentOffer = null;
 let iceCandidatesQueue = [];
 let pendingAutoAccept = false; 
 let mediaReady = false; 
-let isCalling = false; // НОВИЙ ПРАПОРЕЦЬ: чи ми ініціатори дзвінка
-
+let isCalling = false;
 let useFrontCamera = true;
 let hasMultipleCameras = false;
+let audioContext, analyser, dataArray;
 
 const servers = { 
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }] 
+    iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:stun2.l.google.com:19302" },
+        { urls: "stun:stun3.l.google.com:19302" },
+        { urls: "stun:stun4.l.google.com:19302" }
+        // Порада: Для продакшну додайте сюди TURN сервер (напр. Coturn або Twilio)
+    ],
+    // Допомагає зібрати кандидатів заздалегідь
+    iceCandidatePoolSize: 10 
 };
-
 const localUser = /*[[${name}]]*/ 'user';
 
-window.onload = () => {
+const sounds = {
+    incoming: document.getElementById('sndIncoming'),
+    outgoing: document.getElementById('sndOutgoing'),
+    end: document.getElementById('sndEnd'),
+    
+    playIncoming: function() { 
+        this.stopAll(); 
+        if (this.incoming) {
+            this.incoming.play().catch(e => console.error("Incoming play error:", e));
+        }
+    },
+    
+    playOutgoing: function() { 
+        this.stopAll(); 
+        if (this.outgoing) {
+            this.outgoing.play().catch(e => console.error("Outgoing play error:", e));
+        }
+    },
+    
+    playEnd: function() { 
+        this.stopAll(); 
+        if (this.end && this.end.src) {
+            this.end.play().catch(e => console.error("End play error:", e));
+        }
+    },
+    
+    stopAll: function() {
+        [this.incoming, this.outgoing].forEach(s => { 
+            if (s) {
+                s.pause(); 
+                s.currentTime = 0; 
+            }
+        });
+    }
+};
+
+function unlockAudio() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Короткий тон майже непомітний
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.type = 'sine'; // синусоїда
+    oscillator.frequency.setValueAtTime(440, ctx.currentTime); // стандартний A4
+    gainNode.gain.setValueAtTime(0.02, ctx.currentTime); // дуже низька гучність
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.05); // 50 мс
+
+    console.log("Audio розблоковано");
+
+    window.removeEventListener('click', unlockAudio);
+    window.removeEventListener('touchstart', unlockAudio);
+}
+
+window.addEventListener('click', unlockAudio, { once: true });
+window.addEventListener('touchstart', unlockAudio, { once: true });
+
+window.onload = async () => {
+    await checkCameras();
     const urlParams = new URLSearchParams(window.location.search);
     const callerFromServer = urlParams.get('caller');
-    
     if (callerFromServer) {
         selectedUser = callerFromServer;
         pendingAutoAccept = true; 
-        document.getElementById("callStatus").innerText = "Очікування готовності камери...";
+        document.getElementById("callStatus").innerText = "Готуємо камеру...";
     }
 };
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
 
 async function checkCameras() {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    hasMultipleCameras = videoDevices.length > 1;
-    document.getElementById('switchCam').disabled = !hasMultipleCameras;
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        hasMultipleCameras = videoDevices.length > 1;
+        const btn = document.getElementById('switchCam');
+        if (btn) {
+            btn.disabled = !hasMultipleCameras;
+            btn.style.display = hasMultipleCameras ? 'flex' : 'none';
+        }
+        console.log("Доступно камер:", videoDevices.length);
+    } catch (e) {
+        console.error("Помилка при перевірці камер:", e);
+    }
+}
+
+function startVoiceDetection(stream) {
+    if (audioContext) audioContext.close();
+    
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
+    
+    analyser.fftSize = 256;
+    const bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+
+    function checkVolume() {
+        if (!mediaReady || !localStream || !localStream.getAudioTracks()[0]?.enabled) {
+            document.getElementById("localVideo").classList.remove("speaking-glow");
+            requestAnimationFrame(checkVolume);
+            return;
+        }
+
+        analyser.getByteFrequencyData(dataArray);
+        let values = 0;
+        for (let i = 0; i < bufferLength; i++) values += dataArray[i];
+        let average = values / bufferLength;
+
+        const localVid = document.getElementById("localVideo");
+        if (localVid) {
+            if (average > 15) { 
+                localVid.classList.add("speaking-glow");
+            } else {
+                localVid.classList.remove("speaking-glow");
+            }
+        }
+        requestAnimationFrame(checkVolume);
+    }
+    checkVolume();
 }
 
 async function initMedia() {
     try {
+        // 1. Зупиняємо старі треки, щоб звільнити камеру (важливо для Android)
         if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
+            localStream.getTracks().forEach(t => t.stop());
         }
+
         const constraints = {
             audio: true,
-            video: { facingMode: useFrontCamera ? "user" : "environment" }
+            video: {
+                // Використовуємо ідеальні значення, щоб уникнути помилок на старих телефонах
+                facingMode: useFrontCamera ? "user" : "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
         };
-        localStream = await navigator.mediaDevices.getUserMedia(constraints);
-        document.getElementById("localVideo").srcObject = localStream;
-        document.getElementById("localVideo").style.transform = useFrontCamera ? "scaleX(-1)" : "scaleX(1)";
 
-        if (peerConnection) {
-            const videoTrack = localStream.getVideoTracks()[0];
-            const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
-            if (sender) sender.replaceTrack(videoTrack);
-        }
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         
-        mediaReady = true; 
-        console.log("Медіа ініціалізовано успішно");
+        // Оновлюємо глобальну змінну, щоб PeerConnection знав, що ми використовуємо новий потік
+        localStream = stream; 
+        
+        const localVid = document.getElementById("localVideo");
+        localVid.srcObject = localStream;
+        
+        // Дзеркальне відображення лише для селфі-камери
+        localVid.style.transform = useFrontCamera ? "scaleX(-1)" : "scaleX(1)";
+        
+        mediaReady = true;
+        startVoiceDetection(localStream);
+        
+        // Після першого успішного входу — оновлюємо список камер (тепер вони видимі)
         await checkCameras();
-    } catch (e) {
-        console.error("Помилка медіа:", e);
-        document.getElementById("callStatus").innerText = "Помилка камери!";
+        
+        return true;
+    } catch (e) { 
+        console.error("Помилка ініціалізації медіа:", e);
+        return false;
     }
 }
 
 document.getElementById("switchCam").onclick = async () => {
     if (!hasMultipleCameras) return;
+    
+    // Зберігаємо поточний стан мікрофона/відео, щоб не включити їх випадково при перемиканні
+    const micWasEnabled = localStream?.getAudioTracks()[0]?.enabled ?? true;
+    const vidWasEnabled = localStream?.getVideoTracks()[0]?.enabled ?? true;
+
     useFrontCamera = !useFrontCamera;
-    await initMedia();
+    const success = await initMedia(); 
+
+    if (success) {
+        // Повертаємо стан кнопок, який був до перемикання
+        localStream.getAudioTracks()[0].enabled = micWasEnabled;
+        localStream.getVideoTracks()[0].enabled = vidWasEnabled;
+
+        if (peerConnection) {
+            const videoTrack = localStream.getVideoTracks()[0];
+            const audioTrack = localStream.getAudioTracks()[0];
+
+            // Оновлюємо відео-трек для співрозмовника
+            const vSender = peerConnection.getSenders().find(s => s.track?.kind === 'video');
+            if (vSender) await vSender.replaceTrack(videoTrack);
+
+            // Оновлюємо аудіо-трек (щоб мікрофон не зникав)
+            const aSender = peerConnection.getSenders().find(s => s.track?.kind === 'audio');
+            if (aSender) await aSender.replaceTrack(audioTrack);
+        }
+        
+        // Оновлюємо візуальний стан кнопок
+        updateControlButtons();
+    }
 };
+
+function updateControlButtons() {
+    if (!localStream) return;
+
+    const audioTrack = localStream.getAudioTracks()[0];
+    const videoTrack = localStream.getVideoTracks()[0];
+
+    // Оновлюємо мікрофон
+    const micBtn = document.getElementById("toggleMic");
+    if (audioTrack) {
+        const isOff = !audioTrack.enabled;
+        micBtn.classList.toggle("off", isOff);
+        micBtn.innerHTML = isOff ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
+    }
+
+    // Оновлюємо відео
+    const vidBtn = document.getElementById("toggleVid");
+    if (videoTrack) {
+        const isOff = !videoTrack.enabled;
+        vidBtn.classList.toggle("off", isOff);
+        vidBtn.innerHTML = isOff ? '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
+    }
+}
 
 function createPeer(remoteName) {
     if (peerConnection) peerConnection.close();
     peerConnection = new RTCPeerConnection(servers);
 
-    if (localStream) {
-        localStream.getTracks().forEach(track => {
-            peerConnection.addTrack(track, localStream);
-        });
-    }
+    localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+    });
 
     peerConnection.ontrack = e => {
         const remoteVid = document.getElementById("remoteVideo");
         if (remoteVid.srcObject !== e.streams[0]) {
             remoteVid.srcObject = e.streams[0];
-            remoteVid.play().catch(err => console.warn("Автоплей заблоковано:", err));
-            document.getElementById("callStatus").innerText = "Розмова: " + remoteName;
+            remoteVid.onloadedmetadata = () => {
+                remoteVid.play().catch(()=>{});
+                remoteVid.style.opacity = "1";
+            };
+            document.getElementById("callStatus").innerText = "У мережі: " + remoteName;
+            sounds.stopAll();
         }
     };
 
@@ -375,38 +554,52 @@ function createPeer(remoteName) {
             }));
         }
     };
+
+    peerConnection.oniceconnectionstatechange = () => {
+    const state = peerConnection.iceConnectionState;
+    console.log("ICE State:", state);
+    
+    if (state === 'failed') {
+        // Спроба автоматичного рестарту ICE
+        peerConnection.restartIce();
+    }
+    
+    if (state === 'disconnected') {
+        document.getElementById("callStatus").innerText = "Втрата зв'язку...";
+    }
+};
 }
 
 function connectWS() {
     const socket = new SockJS('/websocket');
     stompClient = Stomp.over(socket);
     stompClient.debug = null;
+
     stompClient.connect({}, () => {
-        
+        // 1. Вхідний сигнал
         stompClient.subscribe("/user/" + localUser + "/topic/call", msg => {
             const data = JSON.parse(msg.body);
             if (!pendingAutoAccept) {
                 selectedUser = data.fromUser;
                 document.getElementById("callerName").innerText = data.fromUser;
                 document.getElementById("incomingCallModal").classList.add("show");
+                sounds.playIncoming();
             }
         });
 
+        // 2. Offer
         stompClient.subscribe("/user/" + localUser + "/topic/offer", async msg => { 
             currentOffer = JSON.parse(msg.body); 
-            console.log("Отримано OFFER від", currentOffer.fromUser);
-            
-            // Якщо ми дзвонили і нам відповіли потоком (Offer)
             if (isCalling && currentOffer.fromUser === selectedUser) {
                 await processReceivedOffer(); 
             } else {
-                // Стандартна обробка на випадок звичайної передачі
                 selectedUser = currentOffer.fromUser;
-                document.getElementById("callerName").innerText = currentOffer.fromUser;
                 document.getElementById("incomingCallModal").classList.add("show");
+                sounds.playIncoming();
             }
         });
 
+        // 3. Answer
         stompClient.subscribe("/user/" + localUser + "/topic/answer", async msg => {
             const data = JSON.parse(msg.body);
             if (peerConnection) {
@@ -415,91 +608,71 @@ function connectWS() {
             }
         });
 
+        // 4. Candidate
         stompClient.subscribe("/user/" + localUser + "/topic/candidate", async msg => {
             const data = JSON.parse(msg.body);
             if (peerConnection?.remoteDescription) { 
                 await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate)); 
-            } else { 
-                iceCandidatesQueue.push(data.candidate); 
-            }
+            } else { iceCandidatesQueue.push(data.candidate); }
         });
 
-        stompClient.subscribe("/user/" + localUser + "/topic/endCall", () => resetCall("Співрозмовник завершив дзвінок"));
+        // 5. Завершення (ОБОВ'ЯЗКОВО ТУТ)
+        stompClient.subscribe("/user/" + localUser + "/topic/endCall", () => {
+            sounds.playEnd();
+            resetCall("Співрозмовник завершив дзвінок");
+        });
 
-        // Якщо ми прийшли з головної сторінки - автоматично приймаємо і надсилаємо наш потік
-        if (pendingAutoAccept && selectedUser) {
-            acceptCall();
-        }
+        if (pendingAutoAccept && selectedUser) acceptCall();
     });
 }
 
-// 1. ТОЙ ХТО ПРИЙМАЄ ДЗВІНОК - ВІДПРАВЛЯЄ OFFER
 async function acceptCall() {
-    if (!mediaReady) {
-        console.log("Очікування камери...");
-        setTimeout(acceptCall, 500);
-        return;
-    }
-
+    if (!mediaReady) { setTimeout(acceptCall, 500); return; }
+    sounds.stopAll();
     document.getElementById("incomingCallModal").classList.remove("show");
     pendingAutoAccept = false;
-    
-    // Якщо приймаємо з модалки, беремо користувача
     if (!selectedUser && currentOffer) selectedUser = currentOffer.fromUser;
     if (!selectedUser) return;
 
     createPeer(selectedUser);
-
     try {
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
-        
         stompClient.send("/app/offer", {}, JSON.stringify({
-            toUser: selectedUser, 
-            fromUser: localUser, 
-            offer: offer
+            toUser: selectedUser, fromUser: localUser, offer: offer
         }));
-        
-        document.getElementById("callStatus").innerText = "З'єднання...";
-    } catch (err) {
-        console.error("Помилка при створенні Offer:", err);
-    }
+        document.getElementById("callStatus").innerText = "Підключення...";
+    } catch (err) { console.error("Offer Error:", err); }
 }
 
-// 2. ТОЙ ХТО ДЗВОНИВ - ОТРИМУЄ OFFER І ВІДПРАВЛЯЄ ANSWER
 async function processReceivedOffer() {
-    if (!mediaReady) {
-        setTimeout(processReceivedOffer, 500);
-        return;
-    }
-
+    if (!mediaReady) { setTimeout(processReceivedOffer, 500); return; }
     if (!currentOffer) return;
     createPeer(currentOffer.fromUser);
-
     try {
         await peerConnection.setRemoteDescription(new RTCSessionDescription(currentOffer.offer));
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
-        
         stompClient.send("/app/answer", {}, JSON.stringify({
-            toUser: currentOffer.fromUser, 
-            fromUser: localUser, 
-            answer: answer
+            toUser: currentOffer.fromUser, fromUser: localUser, answer: answer
         }));
-        
         await processIceCandidates();
-        console.log("Відповідь (Answer) успішно відправлено");
-    } catch (err) {
-        console.error("Помилка при створенні Answer:", err);
-    }
+    } catch (err) { console.error("Answer Error:", err); }
 }
 
 async function processIceCandidates() {
+    if (!peerConnection || !peerConnection.remoteDescription) {
+        console.log("Чекаємо на RemoteDescription перед додаванням кандидатів...");
+        return; 
+    }
+    
     while (iceCandidatesQueue.length > 0) {
         const candidate = iceCandidatesQueue.shift();
-        if (peerConnection?.remoteDescription) {
-            try { await peerConnection.addIceCandidate(new RTCIceCandidate(candidate)); } 
-            catch (e) { console.warn("ICE Error", e); }
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            console.log("ICE кандидат успішно доданий");
+        } catch (e) {
+            console.warn("Помилка ICE кандидата:", e);
         }
     }
 }
@@ -512,33 +685,36 @@ function selectUser(el, name) {
     if (window.innerWidth < 992) toggleSidebar();
 }
 
-// ТОЙ ХТО ДЗВОНИТЬ ПРОСТО ВІДПРАВЛЯЄ СПОВІЩЕННЯ, ЩОБ НЕ ВТРАТИТИ OFFER
+document.getElementById("callBtn").addEventListener("click", unlockAudio, { once: true });
 document.getElementById("callBtn").onclick = async () => {
     if(!selectedUser) return alert("Оберіть контакт!");
-    if(!mediaReady) return alert("Будь ласка, зачекайте ініціалізації камери");
-    
-    isCalling = true; // Фіксуємо, що ми ініціатор дзвінка
+    if(!mediaReady) await initMedia();
+    isCalling = true; 
+    sounds.playOutgoing();
     stompClient.send("/app/call", {}, JSON.stringify({toUser: selectedUser, fromUser: localUser}));
-    document.getElementById("callStatus").innerText = "Очікування відповіді від " + selectedUser + "...";
+    document.getElementById("callStatus").innerText = "Виклик " + selectedUser + "...";
 };
 
 function rejectCall() {
+    sounds.playEnd();
     document.getElementById("incomingCallModal").classList.remove("show");
-    if(selectedUser) stompClient.send("/app/endCall", {}, JSON.stringify({toUser: selectedUser}));
-    resetCall("Дзвінок відхилено");
+    if(selectedUser) stompClient.send("/app/endCall", {}, JSON.stringify({toUser: selectedUser, fromUser: localUser}));
+    resetCall("Відхилено");
 }
 
 document.getElementById("endBtn").onclick = () => {
-    if(selectedUser) stompClient.send("/app/endCall", {}, JSON.stringify({toUser: selectedUser}));
-    resetCall("Дзвінок завершено");
+    if(selectedUser) {
+        stompClient.send("/app/endCall", {}, JSON.stringify({toUser: selectedUser, fromUser: localUser}));
+    }
+    sounds.playEnd();
+    resetCall("Ви завершили дзвінок");
 };
 
 function resetCall(msg) {
-    if (peerConnection) { 
-        peerConnection.close(); 
-        peerConnection = null; 
-    }
+    sounds.stopAll();
+    if (peerConnection) { peerConnection.close(); peerConnection = null; }
     document.getElementById("remoteVideo").srcObject = null;
+    document.getElementById("remoteVideo").style.opacity = "0";
     document.getElementById("callStatus").innerText = msg;
     currentOffer = null;
     iceCandidatesQueue = [];
@@ -548,24 +724,29 @@ function resetCall(msg) {
 
 document.getElementById("toggleMic").onclick = function() {
     if (localStream?.getAudioTracks().length > 0) {
-        const t = localStream.getAudioTracks()[0];
-        t.enabled = !t.enabled;
-        this.classList.toggle("off", !t.enabled);
-        this.innerHTML = t.enabled ? '<i class="fas fa-microphone"></i>' : '<i class="fas fa-microphone-slash"></i>';
+        localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled;
+        updateControlButtons();
     }
 };
 
 document.getElementById("toggleVid").onclick = function() {
     if (localStream?.getVideoTracks().length > 0) {
-        const t = localStream.getVideoTracks()[0];
-        t.enabled = !t.enabled;
-        this.classList.toggle("off", !t.enabled);
-        this.innerHTML = t.enabled ? '<i class="fas fa-video"></i>' : '<i class="fas fa-video-slash"></i>';
+        localStream.getVideoTracks()[0].enabled = !localStream.getVideoTracks()[0].enabled;
+        updateControlButtons();
     }
 };
 
-initMedia().finally(() => connectWS());
+document.getElementById("toggleRemoteAudio").onclick = function() {
+    const remoteVid = document.getElementById("remoteVideo");
+    // Перемикаємо стан mute
+    remoteVid.muted = !remoteVid.muted;
+    
+    const isMuted = remoteVid.muted;
+    this.classList.toggle("off", isMuted);
+    this.innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+};
 
+initMedia().finally(() => connectWS());
 /*]]>*/
 </script>
 </body>

@@ -28,11 +28,7 @@
         }
 
         /* Hero Section */
-        .hero {
-            padding: 140px 20px 80px;
-            text-align: center;
-        }
-
+        .hero { padding: 140px 20px 80px; text-align: center; }
         .hero h1 {
             font-size: 3.5rem;
             font-weight: 800;
@@ -42,7 +38,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         .hero p {
             font-size: 1.25rem;
             color: var(--text-secondary);
@@ -61,7 +56,6 @@
             align-items: center;
             gap: 10px;
         }
-
         .btn-call { 
             background: var(--primary); 
             color: #fff; 
@@ -74,7 +68,6 @@
             color: #fff;
             box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.4);
         }
-
         .btn-outline {
             background: rgba(255,255,255,0.05);
             border: 1px solid var(--glass-border);
@@ -86,13 +79,6 @@
             color: #fff;
             transform: translateY(-2px);
         }
-
-        .btn-admin {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            border: none;
-            color: white;
-        }
-
         .btn-logout {
             color: #ef4444;
             font-weight: 600;
@@ -103,17 +89,8 @@
         .btn-logout:hover { opacity: 0.7; color: #f87171; }
 
         /* Feature Cards */
-        .features {
-            padding: 80px 20px;
-        }
-
-        .features h2 {
-            text-align: center;
-            font-weight: 800;
-            margin-bottom: 50px;
-            font-size: 2rem;
-        }
-
+        .features { padding: 80px 20px; }
+        .features h2 { text-align: center; font-weight: 800; margin-bottom: 50px; font-size: 2rem; }
         .feature-card {
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
@@ -124,92 +101,62 @@
             transition: all 0.3s ease;
             text-align: left;
         }
-
         .feature-card:hover {
             transform: translateY(-10px);
             border-color: rgba(99, 102, 241, 0.4);
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
-
         .icon-wrapper {
-            width: 50px;
-            height: 50px;
+            width: 50px; height: 50px;
             background: rgba(99, 102, 241, 0.1);
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            color: var(--primary);
-            font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px; color: var(--primary); font-size: 1.5rem;
         }
-
-        .feature-card h5 {
-            font-weight: 700;
-            margin-bottom: 12px;
-            font-size: 1.1rem;
-        }
-
-        .feature-card p {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin: 0;
-        }
-
         .user-badge {
             background: rgba(99, 102, 241, 0.1);
             color: var(--primary);
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: inline-block;
+            padding: 6px 16px; border-radius: 50px;
+            font-size: 0.9rem; font-weight: 600;
+            margin-bottom: 1rem; display: inline-block;
         }
 
-#incomingCallModal {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #1e293b;
-    padding: 40px;
-    border-radius: 32px;
-    border: 1px solid var(--glass-border);
-    z-index: 2000;
-    box-shadow: 0 0 100px rgba(0,0,0,0.8);
-    width: 90%;
-    max-width: 380px;
-    text-align: center;
-}
-
-#incomingCallModal.show { 
-    display: block; 
-    animation: modalIn 0.4s ease-out; 
-}
-
-@keyframes modalIn {
-    from { opacity: 0; transform: translate(-50%, -45%) scale(0.9); }
-    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
-
-.avatar-call {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, var(--primary), #a855f7);
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    margin: 0 auto 20px;
-    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-}
+        /* Call Modal */
+        #incomingCallModal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e293b;
+            padding: 40px;
+            border-radius: 32px;
+            border: 1px solid var(--glass-border);
+            z-index: 2000;
+            box-shadow: 0 0 100px rgba(0,0,0,0.8);
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+        }
+        #incomingCallModal.show { display: block; animation: modalIn 0.4s ease-out; }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translate(-50%, -45%) scale(0.9); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        .avatar-call {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, var(--primary), #a855f7);
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; margin: 0 auto 20px;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
     </style>
 </head>
 <body>
+
+<video muted autoplay style="display:none"></video>
+<audio id="sndIncoming" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" loop></audio>
+<audio id="sndEnd" src=""></audio>
 
 <section class="hero">
     <div class="container">
@@ -228,13 +175,6 @@
                 <a class="btn btn-outline btn-custom" th:href="@{/contacts}">
                     <i class="fas fa-address-book"></i> Контакти
                 </a>
-                
-                <a class="btn btn-admin btn-custom"
-                   th:if="${role == T(org.example.dial.models.UserRole).ADMIN}" 
-                   th:href="@{/users}">
-                   <i class="fas fa-user-shield"></i> Адмін-панель
-                </a>
-
                 <a class="btn-logout" th:href="@{/auth/logout}">Вийти</a>
             </th:block>
 
@@ -242,9 +182,7 @@
                 <a class="btn btn-call btn-custom" th:href="@{/auth/login}">
                     Увійти <i class="fas fa-sign-in-alt"></i>
                 </a>
-                <a class="btn btn-outline btn-custom" th:href="@{/auth/register}">
-                    Реєстрація
-                </a>
+                <a class="btn btn-outline btn-custom" th:href="@{/auth/register}">Реєстрація</a>
             </th:block>
         </div>
     </div>
@@ -254,39 +192,34 @@
     <div class="container">
         <h2>Наші можливості</h2>
         <div class="row g-4">
-
             <div class="col-md-3">
                 <div class="feature-card">
                     <div class="icon-wrapper"><i class="fas fa-video"></i></div>
                     <h5>Дзвінки 1:1</h5>
-                    <p>Прямі відеодзвінки з високою якістю зображення та мінімальною затримкою.</p>
+                    <p>Прямі відеодзвінки з високою якістю зображення.</p>
                 </div>
             </div>
-
             <div class="col-md-3">
                 <div class="feature-card">
                     <div class="icon-wrapper"><i class="fas fa-users"></i></div>
                     <h5>Групові сесії</h5>
-                    <p>Створюйте конференції для командної роботи або дружніх посиденьок.</p>
+                    <p>Створюйте конференції для командної роботи.</p>
                 </div>
             </div>
-
             <div class="col-md-3">
                 <div class="feature-card">
                     <div class="icon-wrapper"><i class="fas fa-comments"></i></div>
                     <h5>Live Чат</h5>
-                    <p>Обмінюйтеся текстовими повідомленнями прямо під час відеорозмови.</p>
+                    <p>Обмінюйтеся повідомленнями під час відеорозмови.</p>
                 </div>
             </div>
-
             <div class="col-md-3">
                 <div class="feature-card">
                     <div class="icon-wrapper"><i class="fas fa-shield-halved"></i></div>
                     <h5>Приватність</h5>
-                    <p>JWT-авторизація та сучасні протоколи шифрування ваших даних.</p>
+                    <p>JWT-авторизація та сучасні протоколи шифрування.</p>
                 </div>
             </div>
-
         </div>
     </div>
 </section>
@@ -305,38 +238,136 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script th:inline="javascript">
 /*<![CDATA[*/
+    // 1. Отримання даних від сервера
     const isAuthenticated = /*[[${isAuthenticated}]]*/ false;
     const localUser = /*[[${name}]]*/ 'guest';
+    
+    let stompClient = null;
+    let currentCaller = null;
 
+    // 2. МЕНЕДЖЕР ЗВУКІВ (Оголошуємо першим)
+    const sounds = {
+        incoming: document.getElementById('sndIncoming'),
+        end: document.getElementById('sndEnd'),
+        
+        playIncoming: function() { 
+            this.stopAll(); 
+            const playPromise = this.incoming.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => {
+                    console.warn("Звук заблоковано браузером. Очікуємо взаємодії користувача.");
+                });
+            }
+        },
+        
+        playEnd: function() { 
+            this.stopAll(); 
+            this.end.play().catch(e => {}); 
+        },
+        
+        stopAll: function() {
+            if (this.incoming) {
+                this.incoming.pause();
+                this.incoming.currentTime = 0;
+            }
+        }
+    };
+
+    // 3. РОЗБЛОКУВАННЯ АУДІО (Для політики Autoplay)
+    function unlockAudio() {
+    console.log("Спроба розблокування аудіо...");
+    
+    // Створюємо тимчасовий елемент з "тишею" (Base64 silent MP3)
+    const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+    
+    silentAudio.play().then(() => {
+        console.log("Аудіо-систему розблоковано без зайвих звуків");
+        
+        // Тепер, коли контекст розблоковано, підготуємо основні звуки
+        // Просто завантажуємо їх (preload) без відтворення
+        sounds.incoming.load();
+        if (sounds.end) sounds.end.load();
+        
+    }).catch(e => {
+        console.error("Помилка розблокування:", e);
+    });
+    
+    // Видаляємо слухачі
+    window.removeEventListener('click', unlockAudio);
+    window.removeEventListener('touchstart', unlockAudio);
+}
+
+    // Додаємо слухачі на будь-яку дію користувача
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio);
+
+    // 4. ЛОГІКА WEBSOCKET
     if (isAuthenticated) {
-        let socket = new SockJS('/websocket');
-        let stompClient = Stomp.over(socket);
-        stompClient.debug = null; 
+        const socket = new SockJS('/websocket');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null; // Вимикаємо зайві логи в консолі
 
         stompClient.connect({}, () => {
-            console.log("Сповіщення про дзвінки активовано для: " + localUser);
+            console.log("Система сповіщень готова для: " + localUser);
+
+            // Підписка на вхідні дзвінки
             stompClient.subscribe("/user/" + localUser + "/topic/call", msg => {
                 const data = JSON.parse(msg.body);
+                currentCaller = data.fromUser;
                 showCallNotification(data.fromUser);
             });
+
+            // Підписка на скасування дзвінка
+            stompClient.subscribe("/user/" + localUser + "/topic/endCall", () => {
+                hideCallNotification();
+            });
+        }, (error) => {
+            console.error("Помилка WebSocket:", error);
         });
     }
 
+    // 5. КЕРУВАННЯ ІНТЕРФЕЙСОМ МОДАЛКИ
     function showCallNotification(callerName) {
-        document.getElementById("callerNameDisplay").innerText = "Дзвонить: " + callerName;
-        document.getElementById("incomingCallModal").classList.add("show");
+        const modal = document.getElementById("incomingCallModal");
+        const display = document.getElementById("callerNameDisplay");
+        
+        if (modal && display) {
+            display.innerText = "Дзвонить: " + callerName;
+            modal.classList.add("show");
+            sounds.playIncoming(); // Запуск рингтону
+        }
     }
 
+    function hideCallNotification() {
+        const modal = document.getElementById("incomingCallModal");
+        if (modal) {
+            modal.classList.remove("show");
+        }
+        sounds.stopAll();
+        currentCaller = null;
+    }
+
+    // 6. КНОПКИ ДІЇ
     function acceptCall() {
-    const callerName = document.getElementById("callerNameDisplay").innerText.replace("Дзвонить: ", "");
-    window.location.href = "/call?caller=" + encodeURIComponent(callerName);
-}
+        if (currentCaller) {
+            sounds.stopAll();
+            // Перехід на сторінку дзвінка з параметром імені
+            window.location.href = "/call?caller=" + encodeURIComponent(currentCaller);
+        }
+    }
 
     function rejectCall() {
-        document.getElementById("incomingCallModal").classList.remove("show");
+        if (stompClient && currentCaller) {
+            stompClient.send("/app/endCall", {}, JSON.stringify({
+                toUser: currentCaller,
+                fromUser: localUser
+            }));
+        }
+        
+        sounds.playEnd(); // Звук "трубку покладено"
+        hideCallNotification();
     }
 /*]]>*/
 </script>
